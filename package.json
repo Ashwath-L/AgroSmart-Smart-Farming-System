@@ -1,0 +1,20 @@
+{
+     "name": "agro-smart-farming",
+     "version": "1.0.0",
+     "description": "A smart farming application for farmers",
+     "main": "server.js",
+     "scripts": {
+          "start": "node server.js"
+     },
+     "keywords": [],
+     "author": "",
+     "license": "ISC",
+     "dependencies": {
+          "axios": "^1.7.2",
+          "bcryptjs": "^3.0.2",
+          "dotenv": "^16.4.5",
+          "express": "^4.19.2",
+          "jsonwebtoken": "^9.0.2",
+          "mongoose": "^8.5.0"
+     }
+}

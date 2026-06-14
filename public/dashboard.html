@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard - Agro Smart Farming</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-gray-100 font-poppins">
+  <!-- Navbar -->
+  <nav class="bg-green-600 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="/dashboard.html" class="flex items-center space-x-2">
+        <img src="/logo.png" alt="Agro Smart Farming Logo" class="logo">
+        <span class="navbar-heading">Agro Smart Farming</span>
+      </a>
+      <div class="space-x-4">
+        <a href="/dashboard.html" class="hover:underline">Dashboard</a>
+        <a href="/weather.html" class="hover:underline">Weather</a>
+        <button onclick="logout()" class="hover:underline">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <section class="py-12">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-green-800 mb-8 text-center">Farmer Dashboard</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Weather Card -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-semibold text-green-800 mb-4">Weather Information</h3>
+          <div id="weather" class="space-y-2"></div>
+        </div>
+        <!-- Recommendation Card -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-semibold text-green-800 mb-4">Crop Recommendation</h3>
+          <form id="recommendForm" class="space-y-4">
+            <select id="soilType" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+              <option value="" disabled selected>Select Soil Type</option>
+              <option value="Sandy">Sandy</option>
+              <option value="Clay">Clay</option>
+              <option value="Loamy">Loamy</option>
+              <option value="Silty">Silty</option>
+              <option value="Peaty">Peaty</option>
+            </select>
+            <input type="number" id="acres" min="0.1" step="0.1" placeholder="Land Area (acres)" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition">Get Recommendations</button>
+          </form>
+          <div id="recommendations" class="mt-4 space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    async function fetchWeather() {
+      const response = await fetch('/api/weather', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        document.getElementById('weather').innerHTML = `
+          <p class="text-gray-700">Temperature: ${data.temperature}°C</p>
+          <p class="text-gray-700">Humidity: ${data.humidity}%</p>
+          <p class="text-gray-700">Description: ${data.description}</p>
+        `;
+      } else {
+        console.error('Weather fetch failed:', data.message);
+        document.getElementById('weather').innerHTML = `<p class="text-red-600">Error: ${data.message}</p>`;
+      }
+    }
+
+    document.getElementById('recommendForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const soilType = document.getElementById('soilType').value;
+      const acres = parseFloat(document.getElementById('acres').value);
+      console.log('Submitting soil type:', soilType, 'and acres:', acres);
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found, redirecting to login');
+        alert('Please log in to access recommendations.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        console.log('Sending request to /api/recommendation with token:', token);
+        const response = await fetch('/api/recommendation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ soilType, acres }),
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+
+        const data = await response.json();
+        console.log('Recommendation API response:', data);
+
+        if (response.ok) {
+          const profit = (data.recommendations?.profit ?? 0); // Default to 0 if undefined
+          document.getElementById('recommendations').innerHTML = `
+            <p class="text-gray-700">Land Area: ${acres} acres</p>
+            <p class="text-gray-700">Soil Type: ${data.soilType}</p>
+            <p class="text-gray-700">Temperature: ${data.climateData.temperature}°C</p>
+            <p class="text-gray-700">Humidity: ${data.climateData.humidity}%</p>
+            <p class="text-gray-700">Season: ${data.season}</p>
+            <p class="text-gray-700">Recommended Crops: ${data.recommendations.crops.join(', ')}</p>
+            <p class="text-gray-700">Recommended Fertilizers: ${data.recommendations.fertilizers.join(', ')}</p>
+            <p class="text-gray-700">Estimated Profit: ₹${profit.toLocaleString()}</p>
+            <p class="text-gray-700">Reason: ${data.recommendations.reason}</p>
+          `;
+        } else {
+          const profit = (data.recommendations?.profit ?? 0); // Default to 0 if undefined
+          console.error('Recommendation fetch failed:', data.message, 'Status:', response.status);
+          document.getElementById('recommendations').innerHTML = `
+            <p class="text-red-600">Error: ${data.message} (Status: ${response.status})</p>
+            <p class="text-gray-700">Fallback Crops: ${data.recommendations?.crops?.join(', ') || 'N/A'}</p>
+            <p class="text-gray-700">Fallback Fertilizers: ${data.recommendations?.fertilizers?.join(', ') || 'N/A'}</p>
+            <p class="text-gray-700">Estimated Profit: ₹${profit.toLocaleString()}</p>
+            <p class="text-gray-700">Reason: ${data.recommendations?.reason || 'N/A'}</p>
+          `;
+        }
+      } catch (err) {
+        console.error('Fetch error details:', err.message, err);
+        document.getElementById('recommendations').innerHTML = `
+          <p class="text-red-600">Error: Failed to fetch recommendations - ${err.message}.</p>
+          <p class="text-gray-700">Please check your network connection or try again later.</p>
+        `;
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+
+    fetchWeather();
+  </script>
+</body>
+</html>

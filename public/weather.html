@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather - Agro Smart Farming</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="bg-gradient-to-b from-green-100 to-green-300 font-poppins min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-green-600 text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="/weather.html" class="flex items-center space-x-2">
+        <img src="/logo.png" alt="Agro Smart Farming Logo" class="logo">
+        <span class="navbar-heading">Agro Smart Farming</span>
+      </a>
+      <div class="space-x-4">
+        <a href="/dashboard.html" class="hover:underline">Dashboard</a>
+        <a href="/weather.html" class="hover:underline">Weather</a>
+        <button onclick="logout()" class="hover:underline">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Weather Content -->
+  <section class="py-12">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-green-800 mb-8 text-center">Weather Information</h2>
+      <div id="weatherDisplay" class="space-y-6">
+        <!-- Main Weather Card -->
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+          <h3 id="location" class="text-xl font-semibold text-green-800 mb-2"></h3>
+          <div class="flex justify-center items-center space-x-4">
+            <img id="weatherIcon" src="" alt="Weather Icon" class="w-16 h-16">
+            <div>
+              <p id="temperature" class="text-4xl font-bold text-gray-800"></p>
+              <p id="description" class="text-lg text-gray-600 capitalize"></p>
+            </div>
+          </div>
+        </div>
+        <!-- Additional Details -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <p class="text-gray-700">Humidity</p>
+            <p id="humidity" class="text-xl font-semibold text-gray-800"></p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <p class="text-gray-700">Wind Speed</p>
+            <p id="windSpeed" class="text-xl font-semibold text-gray-800"></p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <p class="text-gray-700">Pressure</p>
+            <p id="pressure" class="text-xl font-semibold text-gray-800"></p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <p class="text-gray-700">Sunrise</p>
+            <p id="sunrise" class="text-xl font-semibold text-gray-800"></p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <p class="text-gray-700">Sunset</p>
+            <p id="sunset" class="text-xl font-semibold text-gray-800"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    async function fetchWeather() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const response = await fetch('/api/weather', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // Update weather details with fallback values
+        document.getElementById('location').textContent = data.location ? `Weather in ${data.location}` : 'Weather in Unknown Location';
+        document.getElementById('temperature').textContent = data.temperature !== 'N/A' ? `${data.temperature}°C` : 'N/A';
+        document.getElementById('description').textContent = data.description !== 'N/A' ? data.description : 'N/A';
+        document.getElementById('weatherIcon').src = data.icon ? `http://openweathermap.org/img/wn/${data.icon}@2x.png` : 'http://openweathermap.org/img/wn/01d@2x.png';
+        document.getElementById('humidity').textContent = data.humidity !== 'N/A' ? `${data.humidity}%` : 'N/A';
+        document.getElementById('windSpeed').textContent = data.windSpeed !== 'N/A' ? `${data.windSpeed} m/s` : 'N/A';
+        document.getElementById('pressure').textContent = data.pressure !== 'N/A' ? `${data.pressure} hPa` : 'N/A';
+        
+        // Handle sunrise and sunset with validation
+        const sunriseDate = data.sunrise && data.sunrise !== 0 ? new Date(data.sunrise * 1000) : null;
+        const sunsetDate = data.sunset && data.sunset !== 0 ? new Date(data.sunset * 1000) : null;
+        document.getElementById('sunrise').textContent = sunriseDate && !isNaN(sunriseDate) ? sunriseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+        document.getElementById('sunset').textContent = sunsetDate && !isNaN(sunsetDate) ? sunsetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+      } else {
+        alert(data.message);
+        window.location.href = '/login.html';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+
+    // Fetch weather data on page load
+    fetchWeather();
+  </script>
+</body>
+</html>

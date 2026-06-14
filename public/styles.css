@@ -1,0 +1,64 @@
+/* Custom styles to complement Tailwind CSS */
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+}
+
+/* Card hover effect */
+.bg-white:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+
+/* Button hover effect */
+button:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Logo styling */
+.logo {
+  height: 40px; /* Adjusted to balance with the heading */
+  width: auto; /* Maintain aspect ratio */
+}
+
+/* Navbar heading styling */
+.navbar-heading {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  color: white;
+}
+
+/* Navbar mobile responsiveness */
+@media (max-width: 640px) {
+  nav .space-x-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .navbar-heading {
+    font-size: 1rem; /* Smaller heading on mobile */
+  }
+
+  .logo {
+    height: 30px; /* Slightly smaller logo on mobile */
+  }
+}
+
+/* Weather page background gradient */
+.bg-gradient-to-b.from-green-100.to-green-300 {
+  background: linear-gradient(to bottom, #d1fae5, #86efac);
+}
+
+/* Weather card styling */
+#weatherDisplay .bg-white {
+  transition: transform 0.3s ease;
+}
+
+#weatherDisplay .bg-white:hover {
+  transform: scale(1.02);
+}
